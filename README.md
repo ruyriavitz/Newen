@@ -1,24 +1,47 @@
-# Newen Website
+# Newen.tech
 
-This is the landing page for **Newen**, a company driving innovation across Latin America's energy sector.
+**Making Innovation Happen in Latin America**
 
-## Sections
+Newen is a network of innovation professionals dedicated to bridging the gap between technological potential and real-world implementation in the energy sector.
 
-- Hero: Mission statement
-- About: Newen's purpose and approach
-- Our Work: How we support companies
-- Team: Bios of core team members
-- Contact: Email contact
+From scouting to scaling, we embed ourselves in our clients' teams to:
 
-## Deployment
+* Identify and evaluate emerging technologies
+* Coordinate pilot programs and manage stakeholder alignment
+* Measure the impact of technology adoption
 
-This site is built using plain HTML and CSS and is deployed via [Vercel](https://vercel.com/).
+We support both sides of the innovation ecosystem:
 
-## How to Run Locally
+## For Energy Producers:
 
-Just open `index.html` in your browser.
+* Understand which technologies best fit their needs
+* Evaluate pilots and coordinate implementation
+* Manage projects across stakeholders
+* Measure real-world results and ROI
 
-## License
+## For Technology Providers:
 
-© 2025 Newen. All rights reserved.
-Última actualización: 4 de mayo de 2025.
+* Identify and connect with the right clients in Latin America
+* Navigate procurement and regulatory frameworks
+* Provide top talent to execute and scale operations
+
+## Presence and Network
+
+We maintain strong and fluent connections with leading energy companies across Latin America, including:
+
+* **Argentina**: YPF, Tecpetrol, Pan American Energy, Vista, Pluspetrol, Pampa Energía, CGC
+* **Brazil**: Eneva, Petrobras, Shell, TotalEnergies, Chevron
+* **Colombia**: Ecopetrol, Cenit, Parex, SierraCol
+* **Mexico**: Pemex
+* **Regional**: Repsol, Acciona, ExxonMobil
+
+![Energy Companies Map](Mapa.png)
+
+## Website
+
+Visit us at [www.newen.tech](https://www.newen.tech)
+
+---
+
+**Contact**
+📧 [anna@newen.tech](mailto:anna@newen.tech)
