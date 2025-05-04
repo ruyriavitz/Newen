@@ -21,3 +21,4 @@ Just open `index.html` in your browser.
 ## License
 
 © 2025 Newen. All rights reserved.
+Última actualización: 4 de mayo de 2025.
