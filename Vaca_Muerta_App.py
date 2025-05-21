@@ -4,14 +4,17 @@ import plotly.graph_objects as go
 import numpy as np
 import plotly.express as px
 
+ggl_url='https://drive.google.com/uc?id=1gdB9iv8xcYrMMsQGwWOUSzQkJNu6k9Au'
+ggl_logo='https://drive.google.com/uc?id=1t-8_HCCIoIXcjNDrLWveEqufANyde4uj'
+
 st.set_page_config(page_title="Dashboard Vaca Muerta", layout="wide")
 
-st.image("C:/Users/ruyri/Newen/Material de trabajo/Vaca Muerta/Newen logo V_Full Color.png", width=100)
+st.image(ggl_logo, width=100)
 st.title("Dashboard de Producción - Vaca Muerta")
 
 @st.cache_data
 def cargar_datos():
-    df = pd.read_csv("C:/Users/ruyri/Downloads/vaca_muerta_vm_dashboard.csv", parse_dates=['fecha_data'])
+    df = pd.read_csv(ggl_url, parse_dates=['fecha_data'])
     return df
 
 df = cargar_datos()
