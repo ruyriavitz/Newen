@@ -34,7 +34,7 @@ if 'empresa_filtrada' not in df.columns:
     df['empresa_filtrada'] = df['empresa_unificada'].apply(keep_main_or_other)
 
 # ---- FILTROS JERÁRQUICOS ----
-st.sidebar.header("Filtros")
+st.sidebar.header("Filters")
 empresas_unicas = sorted(df['empresa_filtrada'].dropna().unique())
 yacimientos_todos = sorted(df['areayacimiento'].dropna().unique())
 
@@ -113,7 +113,7 @@ for anio in sorted(prod_pet['anio_inicio'].dropna().unique()):
         )
     )
 fig_pet.update_layout(
-    title="Petróleo (BPD) - Stacked por año de inicio",
+    title="Oil (BPD) - Stacked by starting year",
     xaxis_title="Fecha",
     yaxis_title="Petróleo (BPD)",
     legend_title="Año de inicio",
@@ -133,7 +133,7 @@ for anio in sorted(prod_gas['anio_inicio'].dropna().unique()):
         )
     )
 fig_gas.update_layout(
-    title="Gas (Mm³/d) - Stacked por año de inicio",
+    title="Gas (Mm³/d) - Stacked by starting year",
     xaxis_title="Fecha",
     yaxis_title="Gas (Mm³/d)",
     legend_title="Año de inicio",
@@ -142,7 +142,7 @@ fig_gas.update_layout(
 
 col1, col2 = st.columns(2)
 with col1:
-    st.subheader("Petróleo")
+    st.subheader("Oil")
     st.plotly_chart(fig_pet, use_container_width=True)
 with col2:
     st.subheader("Gas")
@@ -180,7 +180,7 @@ fig_pie_pet_ano = px.pie(
     pie_pet_ano_agg,
     names='anio_inicio',
     values='pet_bpd',
-    title=f"Participación por año de inicio (Petróleo) – {penult_month.strftime('%Y-%m')}",
+    title=f"Share per year (Oil) – {penult_month.strftime('%Y-%m')}",
     hole=0.4
 )
 fig_pie_pet_ano.update_traces(textinfo='percent+label')
@@ -204,7 +204,7 @@ fig_pie_gas_ano = px.pie(
     pie_gas_ano_agg,
     names='anio_inicio',
     values='gas_mm3d',
-    title=f"Participación por año de inicio (Gas) – {penult_month.strftime('%Y-%m')}",
+    title=f"Share per year (Gas) – {penult_month.strftime('%Y-%m')}",
     hole=0.4
 )
 fig_pie_gas_ano.update_traces(textinfo='percent+label')
@@ -298,7 +298,7 @@ fig_pie_pet_cia = px.pie(
     pie_pet_cia_agg,
     names='empresa_filtrada',
     values='pet_bpd',
-    title=f"Participación por compañía (Petróleo) – {penult_month.strftime('%Y-%m')}",
+    title=f"Share per Company (Oil) – {penult_month.strftime('%Y-%m')}",
     hole=0.4
 )
 fig_pie_pet_cia.update_traces(textinfo='percent+label')
@@ -322,7 +322,7 @@ fig_pie_gas_cia = px.pie(
     pie_gas_cia_agg,
     names='empresa_filtrada',
     values='gas_mm3d',
-    title=f"Participación por compañía (Gas) – {penult_month.strftime('%Y-%m')}",
+    title=f"Share per Company (Gas) – {penult_month.strftime('%Y-%m')}",
     hole=0.4
 )
 fig_pie_gas_cia.update_traces(textinfo='percent+label')
@@ -335,7 +335,6 @@ with col2:
     st.plotly_chart(fig_pie_gas_cia, use_container_width=True)
 
 
-st.info("Selecciona filtros en la barra lateral para ver los resultados actualizados por Compañía, Yacimiento y Pozo")
 
 # --- FUNCIONES Y DATA PARA TABS (Pozos promedio/acumulada y KPIs) ---
 def fig_promedio(df, y_col, title, y_label):
