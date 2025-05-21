@@ -89,6 +89,26 @@
       width: 200px;
       margin-bottom: 1em;
     }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2em;
+    }
+    /* Estilo para el botón del Dashboard */
+    .dashboard-btn {
+      display: inline-block;
+      background: #0c3dde;
+      color: #fff;
+      padding: 0.8em 2em;
+      border-radius: 25px;
+      font-weight: 600;
+      text-decoration: none;
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .dashboard-btn:hover {
+      background: #07184f;
+    }
   </style>
 </head>
 <body>
@@ -145,15 +165,17 @@ Newen exists to close that gap.
       </div>
     </div>
   </section>
-<section id="vaca-muerta-dashboard" style="padding: 2rem 0; background: #f6f8fa;">
-  <div class="container">
-    <h2>Vaca Muerta Dashboard</h2>
-    <p>
-      At Newen, we are dedicated to bringing and implementing the technologies necessary for the most efficient development of Vaca Muerta—a vital resource for Argentina's energy future.
-    </p>
-    <a href="/vaca-muerta-dashboard" class="btn btn-primary" style="margin-top: 1rem;">Explore Dashboard</a>
-  </div>
-</section>
+
+  <!-- Vaca Muerta Dashboard Section, centrado -->
+  <section class="section" id="vaca-muerta-dashboard" style="background: #f6f8fa;">
+    <div class="container">
+      <h2>Vaca Muerta Dashboard</h2>
+      <p>
+        At Newen, we are dedicated to bringing and implementing the technologies necessary for the most efficient development of Vaca Muerta—a vital resource for Argentina's energy future.
+      </p>
+      <a href="/vaca-muerta-dashboard" class="dashboard-btn">Explore Dashboard</a>
+    </div>
+  </section>
 
   <section class="section" id="team">
     <h2>Our Team</h2>
@@ -189,4 +211,3 @@ Newen exists to close that gap.
   </footer>
 </body>
 </html>
-
