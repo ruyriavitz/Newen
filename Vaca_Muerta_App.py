@@ -6,10 +6,10 @@ import plotly.express as px
 
 ggl_url='https://drive.google.com/uc?id=1gdB9iv8xcYrMMsQGwWOUSzQkJNu6k9Au'
 
-st.set_page_config(page_title="Dashboard Vaca Muerta", layout="wide")
+st.set_page_config(page_title="Dashboard Vaca Muerta Production", layout="wide")
 
-st.image('logo.png', width=100)
-st.title("Dashboard de Producción - Vaca Muerta")
+st.image("logo.png", width=100)
+st.title("Dashboard Vaca Muerta Production")
 
 @st.cache_data
 def cargar_datos():
