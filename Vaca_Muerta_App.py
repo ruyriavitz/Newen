@@ -266,10 +266,10 @@ fig_gas.update_layout(
 
 col1, col2 = st.columns(2)
 with col1:
-    st.subheader("Visualizaciones de Petróleo")
+    st.subheader("Oil")
     st.plotly_chart(fig_pet, use_container_width=True)
 with col2:
-    st.subheader("Visualizaciones de Gas")
+    st.subheader("Gas")
     st.plotly_chart(fig_gas, use_container_width=True)
 
  # --- PIE CHART por compañía, usando el penúltimo mes ---
@@ -447,7 +447,7 @@ with tab_tipo:
     col1, col2 = st.columns(2)
     # Selector tipo de curva
     tipo_curva = st.radio(
-        "Tipo de curva a visualizar",
+        "Type of curve to visualize",
         options=["Producción promedio mensual", "Acumulada promedio mes a mes"],
         index=0,
         horizontal=True
