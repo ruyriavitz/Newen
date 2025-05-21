@@ -16,7 +16,6 @@ def cargar_datos():
     return df
 
 df = cargar_datos()
-st.image("logo.png", width=100)
 
 # Normalizar nombre de compañía
 principales = [
