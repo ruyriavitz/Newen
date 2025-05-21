@@ -1,189 +1,693 @@
-import pandas as pd
 import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+import numpy as np
 import plotly.express as px
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="Dashboard Vaca Muerta", layout="wide")
+
+st.image("C:/Users/ruyri/Newen/Material de trabajo/Vaca Muerta/Newen logo V_Full Color.png", width=100)
+st.title("Dashboard de Producción - Vaca Muerta")
 
 @st.cache_data
-
 def cargar_datos():
-    produccion = pd.read_csv('http://datos.energia.gob.ar/dataset/c846e79c-026c-4040-897f-1ad3543b407c/resource/b5b58cdc-9e07-41f9-b392-fb9ec68b0725/download/produccin-de-pozos-de-gas-y-petrleo-no-convencional.csv',
-                    usecols=['idpozo', 'sigla', 'anio', 'mes', 'prod_pet', 'prod_gas', 'tef', 'formprod', 'empresa', 'areayacimiento'])
-    fracturas = pd.read_csv(
-        'C:/Users/ruyri/Newen/Material de trabajo/Vaca Muerta/Datos Fracturas.csv',
-        usecols=['idpozo', 'sigla', 'longitud_rama_horizontal_m', 'arena_bombeada_nacional_tn', 'cantidad_fracturas']
-    )
-    return produccion, fracturas
+    df = pd.read_csv("C:/Users/ruyri/Downloads/vaca_muerta_vm_dashboard.csv", parse_dates=['fecha_data'])
+    return df
 
-produccion, fracturas = cargar_datos()
-produccion = produccion[(produccion['formprod'] == 'VMUT') & (produccion['tef'] > 0) & (produccion['anio'] >= 2010)]
-produccion['date'] = pd.to_datetime(produccion['anio'].astype(str) + '-' + produccion['mes'].astype(str) + '-01')
-produccion['bbl_pet'] = (produccion['prod_pet'] / produccion['tef']) * 6.2898
-produccion['gas_Mm3_d'] = produccion['prod_gas'] / produccion['tef']
-produccion['boe_gas'] = produccion['prod_gas'] * 5.615
-produccion['boe_mes'] = produccion['bbl_pet'] * produccion['tef'] + produccion['boe_gas']
-produccion['boed'] = produccion['boe_mes'] / produccion['tef']
+df = cargar_datos()
 
-inicio = produccion.groupby('idpozo')['date'].min().reset_index().rename(columns={'date': 'fecha_inicio'})
-produccion = produccion.merge(inicio, on='idpozo', how='left')
-produccion['mes_relativo'] = ((produccion['date'].dt.year - produccion['fecha_inicio'].dt.year) * 12 +
-                               (produccion['date'].dt.month - produccion['fecha_inicio'].dt.month))
-produccion['anio_inicio'] = produccion['fecha_inicio'].dt.year
-# NOTA: Se eliminará este filtro global para conservar los datos de 2018 en el gráfico total
-# produccion = produccion[produccion['anio_inicio'] >= 2018]
+# Normalizar nombre de compañía
+principales = [
+    'YPF', 'Vista Energy', 'Pluspetrol', 'Tecpetrol',
+    'Pan American Energy', 'Pampa', 'Exxon', 'Shell', 'Total Energies'
+]
+def keep_main_or_other(nombre):
+    if nombre in principales:
+        return nombre
+    elif pd.isnull(nombre):
+        return 'Otros'
+    else:
+        return 'Otros'
 
-boed_por_pozo = produccion.groupby('idpozo').agg({'prod_pet': 'sum', 'prod_gas': 'sum'}).reset_index()
-boed_por_pozo['tipo_pozo'] = boed_por_pozo.apply(lambda x: 'Petrolero' if x['prod_pet'] * 6.2898 > x['prod_gas'] * 5.615 else 'Gasífero', axis=1)
-produccion = produccion.merge(boed_por_pozo[['idpozo', 'tipo_pozo']], on='idpozo', how='left')
+if 'empresa_filtrada' not in df.columns:
+    df['empresa_filtrada'] = df['empresa_unificada'].apply(keep_main_or_other)
 
-fracturas = fracturas.groupby('idpozo').agg({
-    'longitud_rama_horizontal_m': 'max',
-    'arena_bombeada_nacional_tn': 'sum',
-    'cantidad_fracturas': 'sum'
-}).reset_index().reset_index()
-produccion = produccion.merge(fracturas, on='idpozo', how='left')
+# ---- FILTROS JERÁRQUICOS ----
+st.sidebar.header("Filtros")
+empresas_unicas = sorted(df['empresa_filtrada'].dropna().unique())
+yacimientos_todos = sorted(df['areayacimiento'].dropna().unique())
 
-st.sidebar.title("Explorador de Pozos")
+# 1. Definí primero la compañía y yacimiento seleccionados (por defecto)
+cia_sel = None
+yac_sel = None
 
-empresas_validas = ["Todas"] + sorted(produccion['empresa'].dropna().unique())
-empresa_seleccionada = st.sidebar.selectbox("Seleccionar Empresa", options=empresas_validas, index=empresas_validas.index("Todas"))
+# 2. Lógica de filtros jerárquicos
+if 'pozo' not in st.session_state:
+    st.session_state['pozo'] = 'Todos'
 
-df_empresa = produccion.copy() if empresa_seleccionada == "Todas" else produccion[produccion['empresa'] == empresa_seleccionada]
+# Selección de compañía
+cia_sel = st.sidebar.selectbox('Compañía', ['Todos'] + empresas_unicas, key="cia")
 
-yacimientos_validos = sorted(df_empresa['areayacimiento'].dropna().unique())
-yacimiento_seleccionado = st.sidebar.selectbox("Seleccionar Yacimiento", options=["Todos"] + yacimientos_validos)
-
-if yacimiento_seleccionado != "Todos":
-    df_empresa = df_empresa[df_empresa['areayacimiento'] == yacimiento_seleccionado]
-
-siglas_validas = df_empresa['sigla'].dropna().unique()
-pozos_seleccionados = st.sidebar.multiselect("Seleccionar Pozos por Sigla", options=sorted(siglas_validas), default=[], help="Escribí parte de la sigla para filtrar")
-
-df_filtrado = df_empresa[df_empresa['sigla'].isin(pozos_seleccionados)] if pozos_seleccionados else df_empresa.copy()
-
-st.header("⚡ Producción Total por Mes")
-total_prod = df_empresa.groupby(['date']).agg({
-    'bbl_pet': 'sum',
-    'gas_Mm3_d': 'sum'
-}).reset_index()
-
-fig_total = px.line(total_prod, x='date')
-fig_total.add_scatter(x=total_prod['date'], y=total_prod['bbl_pet'], name='petróleo (bbl/d)', yaxis='y1')
-fig_total.add_scatter(x=total_prod['date'], y=total_prod['gas_Mm3_d'], name='gas (Mm³/d)', yaxis='y2')
-fig_total.update_layout(
-    title='Producción Total por Mes - Petróleo y Gas',
-    xaxis_title='Fecha',
-    yaxis=dict(title='Petróleo (bbl/d)', side='left'),
-    yaxis2=dict(title='Gas (Mm³/d)', overlaying='y', side='right', showgrid=False),
-    legend_title='Fluido',
-    legend=dict(x=0.01, y=0.99, xanchor='left')
-)
-st.plotly_chart(fig_total, use_container_width=True)
-
-if not df_filtrado.empty and not pozos_seleccionados == []:
-    df_filtrado = df_filtrado.sort_values(['sigla', 'date'])
-    df_filtrado['boe_acumulado'] = df_filtrado.groupby('sigla')['boe_mes'].cumsum()
-
-    tab1, tab2, tab3, tab4 = st.tabs(["BOED Mensual", "BOE Acumulado", "BOED vs Tiempo", "BOE Acumulado vs Tiempo"])
-
-    with tab1:
-        fig = px.line(df_filtrado, x='date', y='boed', color='sigla', title='Producción BOED mensual por Pozo')
-        st.plotly_chart(fig, use_container_width=True)
-
-    with tab2:
-        fig2 = px.line(df_filtrado, x='date', y='boe_acumulado', color='sigla', title='Producción BOE Acumulada por Pozo')
-        st.plotly_chart(fig2, use_container_width=True)
-
-    with tab3:
-        fig3 = px.line(df_filtrado, x='mes_relativo', y='boed', color='sigla', title='Producción BOED mensual desde inicio (Mes 0)')
-        st.plotly_chart(fig3, use_container_width=True)
-
-    with tab4:
-        fig4 = px.line(df_filtrado, x='mes_relativo', y='boe_acumulado', color='sigla', title='Producción BOE Acumulada desde inicio (Mes 0)')
-        st.plotly_chart(fig4, use_container_width=True)
-
-    st.subheader("📋 Tabla de Producción por Mes desde Inicio")
-    tabla = df_filtrado[['sigla', 'mes_relativo', 'boed', 'longitud_rama_horizontal_m']].copy()
-    tabla['boed'] = tabla['boed'].round().astype('Int64')
-    tabla_pivot = tabla.pivot_table(index=['sigla', 'longitud_rama_horizontal_m'], columns='mes_relativo', values='boed')
-    tabla_pivot.columns = [f"Mes {int(c)}" for c in tabla_pivot.columns]
-    tabla_pivot = tabla_pivot.reset_index()
-    st.dataframe(tabla_pivot)
-    st.download_button("📥 Descargar Tabla de Producción", data=tabla_pivot.to_csv(index=False).encode('utf-8'), file_name='tabla_produccion.csv', mime='text/csv')
-
-# Filtrar datos para análisis de promedios sólo desde 2018
-df_promedios = df_empresa[df_empresa['anio_inicio'] >= 2018].copy()
-
-st.download_button(
-    label="📥 Descargar Datos Filtrados",
-    data=df_filtrado.to_csv(index=False).encode('utf-8'),
-    file_name='datos_filtrados.csv',
-    mime='text/csv'
-)
-
-# Gráficos de promedios y acumulados solo con pozos desde 2018
-max_mes = st.sidebar.slider("Límite de Mes desde Inicio para Gráficos Promedio", min_value=6, max_value=60, value=24)
-
-st.header("📈 Pozo Promedio por Año de Inicio")
-pozos_yac = df_promedios[df_promedios['mes_relativo'] <= max_mes].copy()
-pozos_por_campaña = pozos_yac.groupby(['anio_inicio', 'idpozo', 'mes_relativo']).agg({'boed': 'mean'}).reset_index()
-promedios_por_año = pozos_por_campaña.groupby(['anio_inicio', 'mes_relativo'])['boed'].mean().reset_index()
-fig5 = px.line(promedios_por_año, x='mes_relativo', y='boed', color='anio_inicio',
-               title='Curvas Promedio de Producción por Campaña (mes relativo)',
-               labels={'boed': 'BOED Promedio', 'mes_relativo': 'Mes desde Inicio'})
-st.plotly_chart(fig5, use_container_width=True)
-
-pozos_por_campaña_acum = pozos_yac.groupby(['anio_inicio', 'idpozo', 'mes_relativo']).agg({'boe_mes': 'sum'}).reset_index()
-pozos_por_campaña_acum['boe_acumulado'] = pozos_por_campaña_acum.groupby(['anio_inicio', 'idpozo'])['boe_mes'].cumsum()
-promedios_acumulados = pozos_por_campaña_acum.groupby(['anio_inicio', 'mes_relativo'])['boe_acumulado'].mean().reset_index()
-fig6 = px.line(promedios_acumulados, x='mes_relativo', y='boe_acumulado', color='anio_inicio',
-               title='Acumulado Promedio de Producción por Campaña (BOE)',
-               labels={'boe_acumulado': 'BOE Acumulado Promedio', 'mes_relativo': 'Mes desde Inicio'})
-st.plotly_chart(fig6, use_container_width=True)
-
-st.header("📊 Productividad Inicial en Primeros 6 Meses")
-modo_kpi = st.radio("Seleccionar KPI", options=["Por metro lateral", "Por tonelada de arena", "Por cantidad de fracturas"], horizontal=True)
-
-pozo_6m = df_promedios[df_promedios['mes_relativo'] < 6].groupby('idpozo').agg({
-    'boe_mes': 'sum',
-    'longitud_rama_horizontal_m': 'max',
-    'arena_bombeada_nacional_tn': 'sum',
-    'cantidad_fracturas': 'sum',
-    'anio_inicio': 'first',
-    'tipo_pozo': 'first'
-}).reset_index()
-
-if modo_kpi == "Por metro lateral":
-    pozo_6m['kpi'] = pozo_6m['boe_mes'] / pozo_6m['longitud_rama_horizontal_m']
-    y_label = 'BOE 6m / m lateral'
-elif modo_kpi == "Por tonelada de arena":
-    pozo_6m['kpi'] = pozo_6m['boe_mes'] / pozo_6m['arena_bombeada_nacional_tn']
-    y_label = 'BOE 6m / ton arena'
+# Selección de yacimiento (depende de compañía)
+if cia_sel == 'Todos':
+    yac_filtros = yacimientos_todos
 else:
-    pozo_6m['kpi'] = pozo_6m['boe_mes'] / pozo_6m['cantidad_fracturas']
-    y_label = 'BOE 6m / fractura'
+    yac_filtros = sorted(df[df['empresa_filtrada'] == cia_sel]['areayacimiento'].dropna().unique())
+yac_sel = st.sidebar.selectbox('Yacimiento', ['Todos'] + yac_filtros, key="yac")
 
-fig7 = px.box(pozo_6m, x='anio_inicio', y='kpi', color='tipo_pozo',
-              title=f'Distribución del KPI de Productividad Inicial ({modo_kpi})',
-              labels={'anio_inicio': 'Año de Inicio', 'kpi': y_label})
-st.plotly_chart(fig7, use_container_width=True)
+# Ahora definí los pozos filtrados según compañía y yacimiento seleccionados
+if cia_sel == 'Todos' and yac_sel == 'Todos':
+    pozos_filtrados = sorted(df['sigla'].dropna().unique())
+elif cia_sel != 'Todos' and yac_sel == 'Todos':
+    pozos_filtrados = sorted(df[df['empresa_filtrada'] == cia_sel]['sigla'].dropna().unique())
+elif cia_sel == 'Todos' and yac_sel != 'Todos':
+    pozos_filtrados = sorted(df[df['areayacimiento'] == yac_sel]['sigla'].dropna().unique())
+else:
+    pozos_filtrados = sorted(df[(df['empresa_filtrada'] == cia_sel) & (df['areayacimiento'] == yac_sel)]['sigla'].dropna().unique())
 
-st.caption("App actualizada: integración completa de datos, gráficos, tablas, filtros y descarga para exploración avanzada de la producción en Vaca Muerta. ✅")
+sigla_selected = st.sidebar.selectbox(
+    'Pozo (sigla)',
+    options=['Todos'] + pozos_filtrados,
+    key="pozo"
+)
 
-# Evolución de arena por etapa
-st.header("📉 Evolución de Arena Bombeada por Fractura")
-pozos_etapas = df_promedios[df_promedios['cantidad_fracturas'] > 0].copy()
-pozos_etapas['arena_por_fractura'] = pozos_etapas['arena_bombeada_nacional_tn'] / pozos_etapas['cantidad_fracturas']
+# Si seleccionás un pozo, que te muestre su compañía y yacimiento automáticamente
+if sigla_selected != 'Todos':
+    info_pozo = df[df['sigla'] == sigla_selected].iloc[0]
+    st.sidebar.markdown(f"**Compañía:** {info_pozo['empresa_filtrada']}")
+    st.sidebar.markdown(f"**Yacimiento:** {info_pozo['areayacimiento']}")
+    # (podés bloquear los selectbox de arriba si querés, pero así ya lo informa)
+    cia_sel = info_pozo['empresa_filtrada']
+    yac_sel = info_pozo['areayacimiento']
 
-kpi_evol = pozos_etapas.groupby('anio_inicio')['arena_por_fractura'].mean().reset_index()
-fig8 = px.line(kpi_evol, x='anio_inicio', y='arena_por_fractura', markers=True,
-               title='Arena Bombeada Promedio por Fractura por Año de Inicio',
-               labels={'arena_por_fractura': 'tn arena / fractura', 'anio_inicio': 'Año de Inicio'})
-st.plotly_chart(fig8, use_container_width=True)
+# ---- FILTRAR LA BASE SEGÚN LO SELECCIONADO ----
+df_filtro = df.copy()
+if sigla_selected != 'Todos':
+    df_filtro = df_filtro[df_filtro['sigla'] == sigla_selected]
+else:
+    if cia_sel != 'Todos':
+        df_filtro = df_filtro[df_filtro['empresa_filtrada'] == cia_sel]
+    if yac_sel != 'Todos':
+        df_filtro = df_filtro[df_filtro['areayacimiento'] == yac_sel]
 
-fig9 = px.box(pozos_etapas, x='anio_inicio', y='arena_por_fractura',
-              title='Distribución de Arena Bombeada por Fractura por Año de Inicio',
-              labels={'arena_por_fractura': 'tn arena / fractura', 'anio_inicio': 'Año de Inicio'})
-st.plotly_chart(fig9, use_container_width=True)
+# STACKED: Petróleo y Gas por año de inicio
 
-st.caption("App actualizada: integración completa de datos, gráficos, tablas, filtros y descarga para exploración avanzada de la producción en Vaca Muerta. ✅")
+prod_pet = (
+    df_filtro.groupby(['fecha_data', 'anio_inicio'])['pet_bpd'].sum().reset_index()
+)
+prod_gas = (
+    df_filtro.groupby(['fecha_data', 'anio_inicio'])['gas_mm3d'].sum().reset_index()
+)
+
+fig_pet = go.Figure()
+for anio in sorted(prod_pet['anio_inicio'].dropna().unique()):
+    datos = prod_pet[prod_pet['anio_inicio'] == anio]
+    fig_pet.add_trace(
+        go.Scatter(
+            x=datos['fecha_data'],
+            y=datos['pet_bpd'],
+            mode='lines',
+            stackgroup='one',
+            name=f"Año {int(anio)}"
+        )
+    )
+fig_pet.update_layout(
+    title="Petróleo (BPD) - Stacked por año de inicio",
+    xaxis_title="Fecha",
+    yaxis_title="Petróleo (BPD)",
+    legend_title="Año de inicio",
+    height=400
+)
+
+fig_gas = go.Figure()
+for anio in sorted(prod_gas['anio_inicio'].dropna().unique()):
+    datos = prod_gas[prod_gas['anio_inicio'] == anio]
+    fig_gas.add_trace(
+        go.Scatter(
+            x=datos['fecha_data'],
+            y=datos['gas_mm3d'],
+            mode='lines',
+            stackgroup='one',
+            name=f"Año {int(anio)}"
+        )
+    )
+fig_gas.update_layout(
+    title="Gas (Mm³/d) - Stacked por año de inicio",
+    xaxis_title="Fecha",
+    yaxis_title="Gas (Mm³/d)",
+    legend_title="Año de inicio",
+    height=400
+)
+
+col1, col2 = st.columns(2)
+with col1:
+    st.subheader("Petróleo")
+    st.plotly_chart(fig_pet, use_container_width=True)
+with col2:
+    st.subheader("Gas")
+    st.plotly_chart(fig_gas, use_container_width=True)
+
+
+
+# --- PIE CHART por año de inicio, usando el penúltimo mes ---
+
+col1, col2 = st.columns(2)
+
+
+# Filtrá solo el penúltimo mes para petróleo
+
+last_month = df_filtro['fecha_data'].max().to_period('M')
+penult_month = (last_month - 1).to_timestamp()
+df_mes = df_filtro[df_filtro['fecha_data'].dt.to_period('M') == penult_month.to_period('M')]
+
+pie_pet_ano = df_mes.groupby('anio_inicio')['pet_bpd'].sum().reset_index()
+pie_pet_ano = pie_pet_ano.sort_values('pet_bpd', ascending=False)
+umbral = 0.02
+total = pie_pet_ano['pet_bpd'].sum()
+pie_pet_ano['porcentaje'] = pie_pet_ano['pet_bpd'] / total
+main = pie_pet_ano[pie_pet_ano['porcentaje'] >= umbral]
+otros = pie_pet_ano[pie_pet_ano['porcentaje'] < umbral]
+otros_sum = otros['pet_bpd'].sum()
+pie_pet_ano_agg = main.copy()
+if otros_sum > 0:
+    pie_pet_ano_agg = pd.concat([
+        pie_pet_ano_agg,
+        pd.DataFrame([{'anio_inicio': 'Otros', 'pet_bpd': otros_sum, 'porcentaje': otros_sum / total}])
+    ], ignore_index=True)
+
+fig_pie_pet_ano = px.pie(
+    pie_pet_ano_agg,
+    names='anio_inicio',
+    values='pet_bpd',
+    title=f"Participación por año de inicio (Petróleo) – {penult_month.strftime('%Y-%m')}",
+    hole=0.4
+)
+fig_pie_pet_ano.update_traces(textinfo='percent+label')
+
+# --- GAS PIE CHART ---
+pie_gas_ano = df_mes.groupby('anio_inicio')['gas_mm3d'].sum().reset_index()
+pie_gas_ano = pie_gas_ano.sort_values('gas_mm3d', ascending=False)
+total_gas = pie_gas_ano['gas_mm3d'].sum()
+pie_gas_ano['porcentaje'] = pie_gas_ano['gas_mm3d'] / total_gas
+main_gas = pie_gas_ano[pie_gas_ano['porcentaje'] >= umbral]
+otros_gas = pie_gas_ano[pie_gas_ano['porcentaje'] < umbral]
+otros_sum_gas = otros_gas['gas_mm3d'].sum()
+pie_gas_ano_agg = main_gas.copy()
+if otros_sum_gas > 0:
+    pie_gas_ano_agg = pd.concat([
+        pie_gas_ano_agg,
+        pd.DataFrame([{'anio_inicio': 'Otros', 'gas_mm3d': otros_sum_gas, 'porcentaje': otros_sum_gas / total_gas}])
+    ], ignore_index=True)
+
+fig_pie_gas_ano = px.pie(
+    pie_gas_ano_agg,
+    names='anio_inicio',
+    values='gas_mm3d',
+    title=f"Participación por año de inicio (Gas) – {penult_month.strftime('%Y-%m')}",
+    hole=0.4
+)
+fig_pie_gas_ano.update_traces(textinfo='percent+label')
+
+# --- MOSTRAR EN DOS COLUMNAS ---
+with col1:
+    st.plotly_chart(fig_pie_pet_ano, use_container_width=True)
+with col2:
+    st.plotly_chart(fig_pie_gas_ano, use_container_width=True)
+
+
+# STACKED: Petróleo y Gas por Compañía
+prod_pet = (
+    df_filtro.groupby(['fecha_data', 'empresa_filtrada'])['pet_bpd'].sum().reset_index()
+)
+prod_gas = (
+    df_filtro.groupby(['fecha_data', 'empresa_filtrada'])['gas_mm3d'].sum().reset_index()
+)
+
+fig_pet = go.Figure()
+for empresa in sorted(prod_pet['empresa_filtrada'].dropna().unique()):
+    datos = prod_pet[prod_pet['empresa_filtrada'] == empresa]
+    fig_pet.add_trace(
+        go.Scatter(
+            x=datos['fecha_data'],
+            y=datos['pet_bpd'],
+            mode='lines',
+            stackgroup='one',
+            name=(empresa)
+        )
+    )
+fig_pet.update_layout(
+    title="Petróleo (BPD) - Stacked por Compañía",
+    xaxis_title="Fecha",
+    yaxis_title="Petróleo (BPD)",
+    legend_title="Compañía",
+    height=400
+)
+
+fig_gas = go.Figure()
+for empresa in sorted(prod_gas['empresa_filtrada'].dropna().unique()):
+    datos = prod_gas[prod_gas['empresa_filtrada'] == empresa]
+    fig_gas.add_trace(
+        go.Scatter(
+            x=datos['fecha_data'],
+            y=datos['gas_mm3d'],
+            mode='lines',
+            stackgroup='one',
+            name=(empresa)
+        )
+    )
+fig_gas.update_layout(
+    title="Gas (Mm³/d) - Stacked por Compañía",
+    xaxis_title="Fecha",
+    yaxis_title="Gas (Mm³/d)",
+    legend_title="Compañia",
+    height=400
+)
+
+col1, col2 = st.columns(2)
+with col1:
+    st.subheader("Visualizaciones de Petróleo")
+    st.plotly_chart(fig_pet, use_container_width=True)
+with col2:
+    st.subheader("Visualizaciones de Gas")
+    st.plotly_chart(fig_gas, use_container_width=True)
+
+ # --- PIE CHART por compañía, usando el penúltimo mes ---
+# Si no existe, podés crear prod_pet_cia y prod_gas_cia igual que prod_pet pero agrupando por compañía
+import plotly.express as px
+
+# --- PIE CHART: Producción por compañía (solo penúltimo mes, "Otros" <5%) ---
+umbral = 0.05
+
+# Petróleo
+pie_pet_cia = df_mes.groupby('empresa_filtrada')['pet_bpd'].sum().reset_index()
+pie_pet_cia = pie_pet_cia.sort_values('pet_bpd', ascending=False)
+total_cia = pie_pet_cia['pet_bpd'].sum()
+pie_pet_cia['porcentaje'] = pie_pet_cia['pet_bpd'] / total_cia
+main_cia = pie_pet_cia[pie_pet_cia['porcentaje'] >= umbral]
+otros_cia = pie_pet_cia[pie_pet_cia['porcentaje'] < umbral]
+otros_sum_cia = otros_cia['pet_bpd'].sum()
+pie_pet_cia_agg = main_cia.copy()
+if otros_sum_cia > 0:
+    pie_pet_cia_agg = pd.concat([
+        pie_pet_cia_agg,
+        pd.DataFrame([{'empresa_filtrada': 'Otros', 'pet_bpd': otros_sum_cia, 'porcentaje': otros_sum_cia / total_cia}])
+    ], ignore_index=True)
+
+fig_pie_pet_cia = px.pie(
+    pie_pet_cia_agg,
+    names='empresa_filtrada',
+    values='pet_bpd',
+    title=f"Participación por compañía (Petróleo) – {penult_month.strftime('%Y-%m')}",
+    hole=0.4
+)
+fig_pie_pet_cia.update_traces(textinfo='percent+label')
+
+# Gas
+pie_gas_cia = df_mes.groupby('empresa_filtrada')['gas_mm3d'].sum().reset_index()
+pie_gas_cia = pie_gas_cia.sort_values('gas_mm3d', ascending=False)
+total_gas_cia = pie_gas_cia['gas_mm3d'].sum()
+pie_gas_cia['porcentaje'] = pie_gas_cia['gas_mm3d'] / total_gas_cia
+main_gas_cia = pie_gas_cia[pie_gas_cia['porcentaje'] >= umbral]
+otros_gas_cia = pie_gas_cia[pie_gas_cia['porcentaje'] < umbral]
+otros_sum_gas_cia = otros_gas_cia['gas_mm3d'].sum()
+pie_gas_cia_agg = main_gas_cia.copy()
+if otros_sum_gas_cia > 0:
+    pie_gas_cia_agg = pd.concat([
+        pie_gas_cia_agg,
+        pd.DataFrame([{'empresa_filtrada': 'Otros', 'gas_mm3d': otros_sum_gas_cia, 'porcentaje': otros_sum_gas_cia / total_gas_cia}])
+    ], ignore_index=True)
+
+fig_pie_gas_cia = px.pie(
+    pie_gas_cia_agg,
+    names='empresa_filtrada',
+    values='gas_mm3d',
+    title=f"Participación por compañía (Gas) – {penult_month.strftime('%Y-%m')}",
+    hole=0.4
+)
+fig_pie_gas_cia.update_traces(textinfo='percent+label')
+
+# --- MOSTRAR EN DOS COLUMNAS ---
+col1, col2 = st.columns(2)
+with col1:
+    st.plotly_chart(fig_pie_pet_cia, use_container_width=True)
+with col2:
+    st.plotly_chart(fig_pie_gas_cia, use_container_width=True)
+
+
+st.info("Selecciona filtros en la barra lateral para ver los resultados actualizados por Compañía, Yacimiento y Pozo")
+
+# --- FUNCIONES Y DATA PARA TABS (Pozos promedio/acumulada y KPIs) ---
+def fig_promedio(df, y_col, title, y_label):
+    fig = go.Figure()
+    for anio in sorted(df['anio_inicio'].dropna().unique()):
+        datos = df[df['anio_inicio'] == anio]
+        fig.add_trace(
+            go.Scatter(
+                x=datos['mes_desde_inicio'],
+                y=datos[y_col],
+                mode='lines',
+                name=f"Año {int(anio)}"
+            )
+        )
+    fig.update_layout(
+        title=title,
+        xaxis_title="Mes desde Inicio",
+        yaxis_title=y_label,
+        legend_title="Año de inicio",
+        height=400
+    )
+    fig.update_xaxes(range=[0, 12])
+    return fig
+
+# --- DATA PARA PROMEDIO Y ACUMULADA ---
+df_oil = df_filtro[
+    (df_filtro['tipopozo'].str.upper().str.strip() == 'PETROLÍFERO') &
+    (df_filtro['anio_inicio'] > 2017)
+]
+df_gas = df_filtro[
+    (df_filtro['tipopozo'].str.upper().str.strip() == 'GASÍFERO') &
+    (df_filtro['anio_inicio'] > 2017)
+]
+
+pozo_prom_pet = (
+    df_oil.groupby(['anio_inicio', 'mes_desde_inicio'])['pet_bpd']
+    .mean().reset_index()
+)
+pozo_acum_pet = (
+    df_oil.groupby(['anio_inicio', 'mes_desde_inicio'])['pet_mbbl_acum']
+    .mean().reset_index()
+)
+pozo_prom_gas = (
+    df_gas.groupby(['anio_inicio', 'mes_desde_inicio'])['gas_mm3d']
+    .mean().reset_index()
+)
+pozo_acum_gas = (
+    df_gas.groupby(['anio_inicio', 'mes_desde_inicio'])['gas_bcf_acum']
+    .mean().reset_index()
+)
+
+# Pozo individual
+show_indiv_pet = False
+show_indiv_gas = False
+if df_filtro['sigla'].nunique() == 1:
+    pozo_ind = df_filtro['sigla'].iloc[0]
+    df_pozo = df_filtro[df_filtro['sigla'] == pozo_ind].sort_values('mes_desde_inicio')
+    if df_pozo['tipopozo'].str.upper().str.strip().iloc[0] == 'PETROLÍFERO':
+        show_indiv_pet = True
+        fig_pozo_indiv_pet = go.Figure()
+        fig_pozo_indiv_pet.add_trace(go.Scatter(
+            x=df_pozo['mes_desde_inicio'],
+            y=df_pozo['pet_bpd'],
+            mode='lines+markers',
+            name=f"Pozo {pozo_ind} (BPD)"
+        ))
+        fig_pozo_indiv_pet.add_trace(go.Scatter(
+            x=df_pozo['mes_desde_inicio'],
+            y=df_pozo['pet_mbbl_acum'],
+            mode='lines+markers',
+            name=f"Pozo {pozo_ind} (Acum Mbbls)",
+            yaxis='y2'
+        ))
+        fig_pozo_indiv_pet.update_layout(
+            title=f"Producción diaria y acumulada - {pozo_ind}",
+            xaxis_title="Mes desde Inicio",
+            yaxis=dict(title="Petróleo (BPD)"),
+            yaxis2=dict(title="Acumulado (Mbbls)", overlaying='y', side='right'),
+            legend_title="Curva"
+        )
+    elif df_pozo['tipopozo'].str.upper().str.strip().iloc[0] == 'GASÍFERO':
+        show_indiv_gas = True
+        fig_pozo_indiv_gas = go.Figure()
+        fig_pozo_indiv_gas.add_trace(go.Scatter(
+            x=df_pozo['mes_desde_inicio'],
+            y=df_pozo['gas_mm3d'],
+            mode='lines+markers',
+            name=f"Pozo {pozo_ind} (Mm³/d)"
+        ))
+        fig_pozo_indiv_gas.add_trace(go.Scatter(
+            x=df_pozo['mes_desde_inicio'],
+            y=df_pozo['gas_bcf_acum'],
+            mode='lines+markers',
+            name=f"Pozo {pozo_ind} (Acum Bcf)",
+            yaxis='y2'
+        ))
+        fig_pozo_indiv_gas.update_layout(
+            title=f"Producción diaria y acumulada - {pozo_ind}",
+            xaxis_title="Mes desde Inicio",
+            yaxis=dict(title="Gas (Mm³/d)"),
+            yaxis2=dict(title="Acumulado (Bcf)", overlaying='y', side='right'),
+            legend_title="Curva"
+        )
+
+# --- TABS: Pozos promedio / KPIs ---
+tab_tipo, tab_kpi = st.tabs(["Pozos promedio", "KPIs 6m"])
+
+with tab_tipo:
+    st.subheader("Pozos promedio por año de inicio")
+    col1, col2 = st.columns(2)
+    # Selector tipo de curva
+    tipo_curva = st.radio(
+        "Tipo de curva a visualizar",
+        options=["Producción promedio mensual", "Acumulada promedio mes a mes"],
+        index=0,
+        horizontal=True
+    )
+
+    with col1:
+        
+        if tipo_curva == "Producción promedio mensual":
+            st.plotly_chart(fig_promedio(pozo_prom_pet, 'pet_bpd', "Pozo Promedio por Año de Inicio (Petróleo)", "Petróleo promedio (BPD)"), use_container_width=True)
+        else:
+            st.plotly_chart(fig_promedio(pozo_acum_pet, 'pet_mbbl_acum', "Pozo Promedio Acumulado por Año (Petróleo)", "Petróleo acumulado promedio (Mbbls)"), use_container_width=True)
+
+
+    with col2:
+        if tipo_curva == "Producción promedio mensual":
+            st.plotly_chart(fig_promedio(pozo_prom_gas, 'gas_mm3d', "Pozo Promedio por Año de Inicio (Gas)", "Gas promedio (Mm³/d)"), use_container_width=True)
+        else:
+            st.plotly_chart(fig_promedio(pozo_acum_gas, 'gas_bcf_acum', "Pozo Promedio Acumulado por Año (Gas)", "Gas acumulado promedio (Bcf)"), use_container_width=True)
+
+    if show_indiv_pet or show_indiv_gas:
+        st.markdown("### Pozo individual seleccionado")
+        if show_indiv_pet:
+            st.plotly_chart(fig_pozo_indiv_pet, use_container_width=True)
+        elif show_indiv_gas:
+            st.plotly_chart(fig_pozo_indiv_gas, use_container_width=True)
+
+
+with tab_kpi:
+    st.subheader("KPIs de 6 meses por año de inicio")
+    col1, col2 = st.columns(2)
+    # --- KPI GAS ---
+    df_gas['gas6m_x_lateral_m3'] = df_gas['gas6m_x_lateral'] * 1000
+    df_gas['gas6m_x_arena_m3']   = df_gas['gas6m_x_arena'] * 1000
+    df_gas['gas6m_x_frac_m3']    = df_gas['gas6m_x_frac'] * 1000
+
+    gas_labels = {
+        'gas6m_x_lateral_m3': 'Gas 6m / Lateral (m³/m)',
+        'gas6m_x_arena_m3':   'Gas 6m / Arena (m³/tn)',
+        'gas6m_x_frac_m3':    'Gas 6m / Frac (m³/frac)'
+    }
+    fig_gas_kpi = go.Figure()
+    for col, label in gas_labels.items():
+        fig_gas_kpi.add_trace(go.Bar(
+            x=df_gas['anio_inicio'],
+            y=df_gas[col],
+            name=label,
+            visible=(col == 'gas6m_x_lateral_m3')
+        ))
+    buttons_gas = []
+    for i, (col, label) in enumerate(gas_labels.items()):
+        vis = [False] * len(gas_labels)
+        vis[i] = True
+        buttons_gas.append(dict(
+            label=label,
+            method="update",
+            args=[{"visible": vis},
+                  {"title": f"KPI Gasífero: {label}"}]
+        ))
+    fig_gas_kpi.update_layout(
+        updatemenus=[dict(
+            active=0,
+            buttons=buttons_gas,
+            direction='down',
+            showactive=True,
+            x=1.1, y=1.15
+        )],
+        title="KPI Gasífero: Gas 6m / Lateral (m³/m)",
+        xaxis_title="Año de inicio",
+        yaxis_title="Valor KPI (m³)",
+        legend_title="KPI",
+        height=400
+    )
+    # --- KPI PETRÓLEO ---
+    pet_labels = {
+        'oil6m_x_lateral': 'Oil 6m / Lateral (Mbbl/m)',
+        'oil6m_x_arena': 'Oil 6m / Arena (Mbbl/tn)',
+        'oil6m_x_frac': 'Oil 6m / Frac (Mbbl/frac)'
+    }
+    fig_pet_kpi = go.Figure()
+    for col, label in pet_labels.items():
+        fig_pet_kpi.add_trace(go.Bar(
+            x=df_oil['anio_inicio'],
+            y=df_oil[col],
+            name=label,
+            visible=(col == 'oil6m_x_lateral')
+        ))
+    buttons_pet = []
+    for i, (col, label) in enumerate(pet_labels.items()):
+        vis = [False] * len(pet_labels)
+        vis[i] = True
+        buttons_pet.append(dict(
+            label=label,
+            method="update",
+            args=[{"visible": vis},
+                  {"title": f"KPI Petrolero: {label}"}]
+        ))
+    fig_pet_kpi.update_layout(
+        updatemenus=[dict(
+            active=0,
+            buttons=buttons_pet,
+            direction='down',
+            showactive=True,
+            x=1.1, y=1.15
+        )],
+        title="KPI Petrolero: Oil 6m / Lateral (Mbbl/m)",
+        xaxis_title="Año de inicio",
+        yaxis_title="Valor KPI (Mbbl)",
+        legend_title="KPI",
+        height=400
+    )
+    with col1:
+        st.plotly_chart(fig_pet_kpi, use_container_width=True)
+    with col2:
+        st.plotly_chart(fig_gas_kpi, use_container_width=True)
+
+# --- TOP 10 MEJORES POZOS DE PETRÓLEO Y GAS POR ACUMULADO EN 6 MESES (1 POZO ÚNICO) ---
+
+st.markdown("## Top 10 mejores pozos en 6 meses (Oil & Gas)")
+
+col1, col2 = st.columns(2)
+
+# --- PETRÓLEO ---
+top_oil = (
+    df[df['oil_acum_6m_mbbl'].notnull()]
+    .groupby('sigla', as_index=False)
+    .agg({
+        'oil_acum_6m_mbbl': 'max',
+        'areayacimiento': 'first',
+        'empresa_filtrada': 'first'
+    })
+    .sort_values('oil_acum_6m_mbbl', ascending=False)
+    .head(10)
+    .copy()
+)
+top_oil = top_oil[::-1]
+
+with col1:
+    st.subheader("Top 10 Pozos Petrolíferos (acum. 6 meses)")
+    fig_top_oil = go.Figure(go.Bar(
+        x=top_oil['oil_acum_6m_mbbl'],
+        y=top_oil['sigla'],
+        orientation='h',
+        marker=dict(color='indianred'),
+        text=[f"{yac} | {cia}" for yac, cia in zip(top_oil['areayacimiento'], top_oil['empresa_filtrada'])],
+        hovertemplate='Pozo: %{y}<br>Acum. 6m: %{x:.2f} Mbbl<br>%{text}<extra></extra>'
+    ))
+    fig_top_oil.update_layout(
+        xaxis_title="Acumulado 6 meses (Mbbl)",
+        yaxis_title="Pozo (sigla)",
+        title="Top 10 Pozos de Petróleo (acumulado 6 meses)",
+        height=400
+    )
+    st.plotly_chart(fig_top_oil, use_container_width=True)
+
+# --- GAS ---
+top_gas = (
+    df[df['gas_acum_6m_bcf'].notnull()]
+    .groupby('sigla', as_index=False)
+    .agg({
+        'gas_acum_6m_bcf': 'max',
+        'areayacimiento': 'first',
+        'empresa_filtrada': 'first'
+    })
+    .sort_values('gas_acum_6m_bcf', ascending=False)
+    .head(10)
+    .copy()
+)
+top_gas = top_gas[::-1]
+
+with col2:
+    st.subheader("Top 10 Pozos Gasíferos (acum. 6 meses)")
+    fig_top_gas = go.Figure(go.Bar(
+        x=top_gas['gas_acum_6m_bcf'],
+        y=top_gas['sigla'],
+        orientation='h',
+        marker=dict(color='steelblue'),
+        text=[f"{yac} | {cia}" for yac, cia in zip(top_gas['areayacimiento'], top_gas['empresa_filtrada'])],
+        hovertemplate='Pozo: %{y}<br>Acum. 6m: %{x:.2f} Bcf<br>%{text}<extra></extra>'
+    ))
+    fig_top_gas.update_layout(
+        xaxis_title="Acumulado 6 meses (Bcf)",
+        yaxis_title="Pozo (sigla)",
+        title="Top 10 Pozos de Gas (acumulado 6 meses)",
+        height=400
+    )
+    st.plotly_chart(fig_top_gas, use_container_width=True)
+
+# --- SCATTER DE ARENA POR FRACTURA POR AÑO ---
+
+
+# Aseguramos que no haya división por cero
+df_oil_scatter = df_oil.copy()
+df_gas_scatter = df_gas.copy()
+df_oil_scatter['arena_por_frac'] = np.where(df_oil_scatter['cantidad_fracturas'] > 0,
+                                            df_oil_scatter['arena_bombeada'] / df_oil_scatter['cantidad_fracturas'],
+                                            np.nan)
+df_gas_scatter['arena_por_frac'] = np.where(df_gas_scatter['cantidad_fracturas'] > 0,
+                                            df_gas_scatter['arena_bombeada'] / df_gas_scatter['cantidad_fracturas'],
+                                            np.nan)
+
+st.markdown("---")
+st.markdown("### Arena bombeada por fractura por año de inicio")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    fig_scatter_oil = go.Figure()
+    fig_scatter_oil.add_trace(go.Scatter(
+        x=df_oil_scatter['anio_inicio'],
+        y=df_oil_scatter['arena_por_frac'],
+        mode='markers',
+        marker=dict(size=7, color=df_oil_scatter['empresa_filtrada'].astype('category').cat.codes,
+                    colorbar=dict()),
+        text=df_oil_scatter['sigla'],
+        hovertemplate="Pozo: %{text}<br>Año: %{x}<br>Arena/Frac: %{y:.1f} tn"
+    ))
+    fig_scatter_oil.update_layout(
+        title="Petrolíferos: Arena bombeada por fractura",
+        xaxis_title="Año de inicio",
+        yaxis_title="Arena por fractura (toneladas)",
+        height=400
+    )
+    st.plotly_chart(fig_scatter_oil, use_container_width=True)
+
+with col2:
+    fig_scatter_gas = go.Figure()
+    fig_scatter_gas.add_trace(go.Scatter(
+        x=df_gas_scatter['anio_inicio'],
+        y=df_gas_scatter['arena_por_frac'],
+        mode='markers',
+        marker=dict(size=7, color=df_gas_scatter['empresa_filtrada'].astype('category').cat.codes,
+                    colorbar=dict()),
+        text=df_gas_scatter['sigla'],
+        hovertemplate="Pozo: %{text}<br>Año: %{x}<br>Arena/Frac: %{y:.1f} tn"
+    ))
+    fig_scatter_gas.update_layout(
+        title="Gasíferos: Arena bombeada por fractura",
+        xaxis_title="Año de inicio",
+        yaxis_title="Arena por fractura (toneladas)",
+        height=400
+    )
+    st.plotly_chart(fig_scatter_gas, use_container_width=True)
+
