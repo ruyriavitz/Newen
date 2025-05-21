@@ -5,11 +5,10 @@ import numpy as np
 import plotly.express as px
 
 ggl_url='https://drive.google.com/uc?id=1gdB9iv8xcYrMMsQGwWOUSzQkJNu6k9Au'
-ggl_logo='https://drive.google.com/uc?id=1t-8_HCCIoIXcjNDrLWveEqufANyde4uj'
 
 st.set_page_config(page_title="Dashboard Vaca Muerta", layout="wide")
 
-st.image(ggl_logo, width=100)
+st.image(logo.png, width=100)
 st.title("Dashboard de Producción - Vaca Muerta")
 
 @st.cache_data
