@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 import os
+from gmail_reader import get_sent_emails
 
 # Nombre del archivo para guardar los datos
 data_file = 'bd_tracking.csv'
@@ -25,6 +26,28 @@ semana_actual = hoy.isocalendar()[1]
 df = load_data()
 
 st.title("📈 Seguimiento de BD - Newen")
+# Leer correos enviados automáticamente
+st.subheader("📬 Acciones detectadas en correos enviados")
+
+if st.button("Leer correos enviados desde Gmail"):
+    dominios_relevantes = ['@ypf.com.ar', '@pan-energy.com', '@pampaenergia.com']  # Agregá los que quieras
+    correos_df = get_sent_emails(domains=dominios_relevantes, days_back=7)
+
+    nuevas_filas = []
+    for _, row in correos_df.iterrows():
+        semana_correo = row['Fecha'].isocalendar()[1]
+        empresa = ''  # Esto podrías inferirlo según el dominio si querés automatizarlo más
+        cliente = row['Destinatario']
+        accion = f"Correo: {row['Asunto']} - {row['Resumen']}"
+        nuevas_filas.append([empresa, cliente, semana_correo, accion])
+
+    if nuevas_filas:
+        df_nuevo = pd.DataFrame(nuevas_filas, columns=['Empresa', 'Cliente', 'Semana', 'Acción'])
+        df = pd.concat([df, df_nuevo], ignore_index=True)
+        save_data(df)
+        st.success(f"✅ Se agregaron {len(nuevas_filas)} acciones desde Gmail.")
+    else:
+        st.info("📭 No se encontraron correos enviados relevantes en los últimos días.")
 
 # Formulario de entrada
 st.subheader("Agregar nueva acción")
