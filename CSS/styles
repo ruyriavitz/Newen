@@ -27,7 +27,8 @@ nav a:hover {
 }
 
 .logo {
-  width: 20px;
+  width: 160px;
+  height: auto;
   margin-bottom: 1em;
 }
 
