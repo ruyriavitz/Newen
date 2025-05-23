@@ -70,6 +70,13 @@ footer {
   padding: 1.5em;
   font-size: 0.9em;
 }
+.team-member {
+  text-align: left;
+  background: #f9f9f9;
+  padding: 2em;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
 
 /* Responsive - Ajustes para móviles */
 @media (max-width: 768px) {
