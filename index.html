@@ -19,59 +19,30 @@
       background: #07184f;
       color: #fff;
       padding: 1em;
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .logo {
-      width: 150px;
-      margin-left: 1em;
-    }
-    nav {
-      margin-right: 1em;
+      text-align: center;
     }
     nav a {
       color: #fff;
-      margin: 0 10px;
+      margin: 0 15px;
       text-decoration: none;
       font-weight: 600;
-      cursor: pointer;
     }
-    section.hero {
+    .hero {
       background: linear-gradient(to right, #0c3dde, #ffa044);
-      padding: 120px 2em 2em; /* account for fixed header */
+      padding: 2.5em 2em;
       text-align: center;
       color: white;
     }
-    section.hero h2,
-    section.hero p {
+    .hero h2,
+    .hero p {
       font-weight: 600;
-      margin: 0 auto 1em;
-      max-width: 800px;
-    }
-    .views {
-      padding: 2em;
-      padding-top: 0;
-      margin-top: 1em;
-    }
-    .view {
-      display: none;
-    }
-    .view.active {
-      display: block;
+      color: white;
     }
     .section {
+      padding: 3em 2em;
       max-width: 1200px;
       margin: 0 auto;
       border-bottom: 2px solid #E6E6E6;
-      padding-bottom: 2em;
-    }
-    .section:last-of-type {
-      border-bottom: none;
     }
     .section-flex {
       display: flex;
@@ -86,7 +57,7 @@
       flex: 1 1 30%;
     }
     .section-flex .text {
-      flex: 1 1 60%;
+      flex: 1 1 35%;
     }
     .map-container {
       max-width: 360px;
@@ -104,11 +75,6 @@
       display: block;
       margin-bottom: 0.5em;
     }
-    .dashboard-frame {
-      width: 100%;
-      height: 80vh;
-      border: none;
-    }
     footer {
       background: #07184f;
       color: #fff;
@@ -116,8 +82,32 @@
       padding: 1.5em;
       font-size: 0.9em;
     }
-    h2, h3 {
+    h1, h2, h3 {
       color: #0c3dde;
+    }
+    .logo {
+      width: 200px;
+      margin-bottom: 1em;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2em;
+    }
+    /* Estilo para el botón del Dashboard */
+    .dashboard-btn {
+      display: inline-block;
+      background: #0c3dde;
+      color: #fff;
+      padding: 0.8em 2em;
+      border-radius: 25px;
+      font-weight: 600;
+      text-decoration: none;
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .dashboard-btn:hover {
+      background: #07184f;
     }
   </style>
 </head>
@@ -125,11 +115,10 @@
   <header>
     <img src="logo.png" alt="Newen Logo" class="logo">
     <nav>
-      <a data-view="about">About</a>
-      <a data-view="work">Our Work</a>
-      <a data-view="team">Team</a>
-      <a data-view="dashboard">Dashboard</a>
-      <a data-view="contact">Contact</a>
+      <a href="#about">About</a>
+      <a href="#work">Our Work</a>
+      <a href="#team">Team</a>
+      <a href="#contact">Contact</a>
     </nav>
   </header>
 
@@ -138,79 +127,106 @@
     <p>From scouting to scaling — We embed ourselves within our clients’ teams to turn technological opportunities into real, measurable results.</p>
   </section>
 
-  <div class="views">
-    <section id="about" class="view active section">
-      <div class="section-flex">
-        <div class="text">
-          <h2>About Newen</h2>
-          <p>We are a network of innovation enthusiasts with deep experience in analyzing and implementing processes that help organizations become more open to technological solutions.<br><br>Across all organizations, we have seen a recurring challenge: a significant gap between identifying a promising technology and successfully implementing it. Newen exists to close that gap.</p>
-        </div>
-        <img src="gap.png" alt="Close the Gap Illustration">
+  <section class="section" id="about">
+    <div class="section-flex">
+      <div class="text">
+        <h2>About Newen</h2>
+        <p>We are a network of innovation enthusiasts with deep experience in analyzing and implementing processes that help organizations become more open to technological solutions. 
+Across all organizations, we have seen a recurring challenge: a significant gap between identifying a promising technology and successfully implementing it. 
+Newen exists to close that gap.
+<br><br>
+</p>
       </div>
-    </section>
+      <img src="gap.png" alt="Close the Gap Illustration">
+    </div>
+  </section>
 
-    <section id="work" class="view section">
-      <div class="section-flex">
-        <img src="funnel.png" alt="Innovation Funnel">
-        <div class="text">
-          <h2>Our Work</h2>
-          <p>We help energy producers to:</p>
-          <ul>
-            <li>Understand which technologies best fit their needs</li>
-            <li>Evaluate pilots</li>
-            <li>Coordinate implementation across stakeholders (Project Management)</li>
-            <li>Measure the impact of adopted technologies</li>
-          </ul>
-          <p>We help technology providers to:</p>
-          <ul>
-            <li>Find the right client in Latin America</li>
-            <li>Close contracts and supervise local operations</li>
-            <li>Provide top talent for execution</li>
-          </ul>
-        </div>
-        <div class="map-container">
-          <img src="Mapa.png" alt="Energy Companies in Latin America">
-        </div>
+  <section class="section" id="work">
+    <div class="section-flex">
+      <img src="funnel.png" alt="Innovation Funnel">
+      <div class="text">
+        <h2>Our Work</h2>
+        <p>We help energy producers to:</p>
+        <ul>
+          <li>Understand which technologies best fit their needs</li>
+          <li>Evaluate pilots</li>
+          <li>Coordinate implementation across stakeholders (Project Management)</li>
+          <li>Measure the impact of adopted technologies</li>
+        </ul>
+        <p>We help technology providers to:</p>
+        <ul>
+          <li>Find the right client in Latin America</li>
+          <li>Close contracts and supervise local operations</li>
+          <li>Provide top talent for execution</li>
+        </ul>
       </div>
-    </section>
-
-    <section id="team" class="view section">
-      <h2>Our Team</h2>
-      <div class="team-member">
-        <h3>Ruy Riavitz</h3>
-        <p><strong>Founder @ Newen | Former Director LatAm @ Darcy Partners</strong> An executive with over 25 years of experience in the energy sector. As Director for Latin America at Darcy Partners, he witnessed the structural challenges that organizations face when trying to innovate — not due to a lack of ideas, but because of internal barriers. This realization led him to found Newen together with Darcy’s Latam Team, a company created to bridge the gap между innovation and execution.</p>
+      <div class="map-container">
+        <img src="Mapa.png" alt="Energy Companies in Latin America">
       </div>
-      <!-- ... otros miembros ... -->
-    </section>
+    </div>
+  </section>
 
-    <section id="dashboard" class="view section" style="text-align:center;">
-      <h2>Vaca Muerta Dashboard</h2>
-      <p>At Newen, we are dedicated to bringing and implementing the technologies necessary for the most efficient development of Vaca Muerta—a vital resource for Argentina's energy future.</p>
-      <iframe class="dashboard-frame" src="https://vacamuertaapppy-naqfpz7evaf9jvyqhmmz5k.streamlit.app/">Your browser doesn’t support iframes</iframe>
-    </section>
-
-    <section id="contact" class="view section">
-      <h2>Contact</h2>
-      <p>Reach us at <a href="mailto:anna@newen.tech">anna@newen.tech</a></p>
-    </section>
+ <section id="vaca-muerta-dashboard" style="padding: 2rem 0; background: #f6f8fa;">
+  <div class="container" style="text-align: center; max-width: 800px; margin: 0 auto;">
+    <h2>Vaca Muerta Dashboard</h2>
+    <p>
+      At Newen, we are dedicated to bringing and implementing the technologies necessary for the most efficient development of Vaca Muerta—a vital resource for Argentina's energy future.
+    </p>
+    <a href="https://vacamuertaapppy-naqfpz7evaf9jvyqhmmz5k.streamlit.app/" target="_blank" 
+       style="
+         display: inline-block;
+         margin-top: 1.5rem;
+         padding: 1em 2.5em;
+         background: linear-gradient(to right, #0c3dde, #ffa044);
+         color: white;
+         border: none;
+         border-radius: 32px;
+         font-size: 1.2em;
+         font-weight: 600;
+         text-decoration: none;
+         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+         transition: background 0.2s;
+       "
+       onmouseover="this.style.background='linear-gradient(to right, #ffa044, #0c3dde)';"
+       onmouseout="this.style.background='linear-gradient(to right, #0c3dde, #ffa044)';"
+    >
+      Explore Dashboard
+    </a>
   </div>
+</section>
+
+
+  <section class="section" id="team">
+    <h2>Our Team</h2>
+    <div class="team-member">
+      <h3>Ruy Riavitz</h3>
+      <p><strong>Founder @ Newen | Former Director LatAm @ Darcy Partners</strong> An executive with over 25 years of experience in the energy sector. As Director for Latin America at Darcy Partners, he witnessed the structural challenges that organizations face when trying to innovate — not due to a lack of ideas, but because of internal barriers. This realization led him to found Newen together with Darcy’s Latam Team, a company created to bridge the gap between innovation and execution.</p>
+    </div>
+    <div class="team-member">
+      <h3>Anna Villar de Rohde</h3>
+      <p><strong>Founder @ Newen | Former Customer Success Associate @ Darcy Partners</strong> With a background in operations and team coordination, Anna focuses on making things run smoothly — aligning people, organizing workflows, and ensuring priorities move forward. She brings a practical mindset to both internal and client-facing work, helping teams stay focused and effective across projects.</p>
+    </div>
+    <div class="team-member">
+      <h3>Federico Verrastro</h3>
+      <p><strong>Partner @ Newen | Former RTOC Completions Manager @ Tecpetrol</strong> Until recently, Federico led the Real-Time Operations Center (RTOC) for completions at Tecpetrol, where he played a key role in integrating data-driven decision-making into hydraulic fracturing operations across Vaca Muerta. His work focused on combining real-time data streams with advanced analytics to enhance operational efficiency and improve well performance. Federico brings a strong track record of driving innovation in unconventional resource development through applied technology.</p>
+    </div>
+    <div class="team-member">
+      <h3>Bernardo Estefan</h3>
+      <p><strong>Partner @ Newen | Co-founder @ Energy Spin</strong> Bernardo Estefan is a business leader with 15+ years of experience in innovation, strategy, and new business development in Brazil’s energy sector. At Eneva, he led Corporate Venture Capital initiatives, connecting startups with business units to drive innovation and strategic growth. He is also Co-founder of Energy Spin, an ecosystem designed to scale innovation in energy and sustainability. At Newen, he brings deep expertise in building high-impact innovation ecosystems in Brazil.</p>
+    </div>
+    <div class="team-member">
+      <h3>Andrés Felipe López</h3>
+      <p><strong>Partner @ Newen | Former Head of Innovation @ Ecopetrol</strong> Andrés brings 20+ years of experience leading innovation, strategy, and digital transformation across Latin America. As Head of Innovation and CT+i Portfolio at Ecopetrol, he led the group's innovation system across 7 countries, managing +USD 80M in investments and positioning the company as #1 in Colombia’s 2024 innovation ranking (ANDI). At Newen, he leverages this experience to help companies turn ambition into impact through innovation, technology, and ecosystem collaboration.</p>
+    </div>
+  </section>
+
+  <section class="section" id="contact">
+    <h2>Contact</h2>
+    <p>Reach us at <a href="mailto:anna@newen.tech">anna@newen.tech</a></p>
+  </section>
 
   <footer>
     <p>&copy; 2025 Newen. All rights reserved.</p>
   </footer>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const navLinks = document.querySelectorAll('nav a');
-      const views = document.querySelectorAll('.view');
-      navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-          const target = link.getAttribute('data-view');
-          views.forEach(v => v.classList.remove('active'));
-          document.getElementById(target).classList.add('active');
-        });
-      });
-    });
-  </script>
 </body>
 </html>
