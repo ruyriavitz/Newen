@@ -78,6 +78,32 @@ footer {
   box-shadow: 0 0 10px rgba(0,0,0,0.05);
 }
 
+.proposal-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2em;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.proposal-image {
+  flex: 1 1 250px;
+  text-align: center;
+}
+
+.proposal-image img {
+  max-width: 100%;
+  height: auto;
+}
+
+.proposal-text {
+  flex: 2 1 400px;
+  text-align: left;
+}
+
+
 /* Responsive - Ajustes para móviles */
 @media (max-width: 768px) {
   .hero {
