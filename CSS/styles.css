@@ -35,7 +35,7 @@ nav a:hover {
 .hero {
   background: linear-gradient(to right, #0c3dde, #ffa044); /* Degradado Newen */
   padding: 4em 2em;
-  text-align: center;
+  text-align: justified;
   color: white;
 }
 
@@ -54,7 +54,7 @@ nav a:hover {
   max-width: 1200px;
   margin: 0 auto;
   border-bottom: 2px solid #E6E6E6;
-  text-align: center;
+  text-align: justified;
 }
 
 .section img {
@@ -66,7 +66,7 @@ nav a:hover {
 footer {
   background-color: #07184f;
   color: white;
-  text-align: center;
+  text-align: justified;
   padding: 1.5em;
   font-size: 0.9em;
 }
