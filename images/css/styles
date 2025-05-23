@@ -1,0 +1,91 @@
+/* Estilos globales del sitio web Newen */
+body {
+  font-family: 'Montserrat', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff;
+  color: #4D4D4F;
+  line-height: 1.6;
+}
+
+header {
+  background-color: #07184f; /* Azul oscuro Newen */
+  padding: 1em;
+  text-align: center;
+}
+
+nav a {
+  color: #ffffff;
+  margin: 0 15px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+nav a:hover {
+  color: #ffa044; /* Naranja destacado Newen */
+}
+
+.logo {
+  width: 200px;
+  margin-bottom: 1em;
+}
+
+.hero {
+  background: linear-gradient(to right, #0c3dde, #ffa044); /* Degradado Newen */
+  padding: 4em 2em;
+  text-align: center;
+  color: white;
+}
+
+.hero h2 {
+  font-size: 2em;
+  margin-bottom: 0.5em;
+}
+
+.hero p {
+  font-size: 1.2em;
+  margin-top: 0;
+}
+
+.section {
+  padding: 3em 2em;
+  max-width: 1200px;
+  margin: 0 auto;
+  border-bottom: 2px solid #E6E6E6;
+  text-align: center;
+}
+
+.section img {
+  max-width: 100%;
+  height: auto;
+  margin-top: 1.5em;
+}
+
+footer {
+  background-color: #07184f;
+  color: white;
+  text-align: center;
+  padding: 1.5em;
+  font-size: 0.9em;
+}
+
+/* Responsive - Ajustes para móviles */
+@media (max-width: 768px) {
+  .hero {
+    padding: 2em 1em;
+  }
+
+  nav a {
+    display: block;
+    margin: 0.5em 0;
+  }
+
+  .logo {
+    width: 160px;
+  }
+
+  .section {
+    padding: 2em 1em;
+  }
+}
