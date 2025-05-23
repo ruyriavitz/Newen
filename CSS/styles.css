@@ -11,7 +11,7 @@ body {
 header {
   background-color: #07184f; /* Azul oscuro Newen */
   padding: 1em;
-  text-align: center;
+  text-align: left;
 }
 
 nav a {
@@ -35,7 +35,7 @@ nav a:hover {
 .hero {
   background: linear-gradient(to right, #0c3dde, #ffa044); /* Degradado Newen */
   padding: 4em 2em;
-  text-align: justified;
+  text-align: left;
   color: white;
 }
 
@@ -54,7 +54,7 @@ nav a:hover {
   max-width: 1200px;
   margin: 0 auto;
   border-bottom: 2px solid #E6E6E6;
-  text-align: justified;
+  text-align: left;
 }
 
 .section img {
@@ -66,7 +66,7 @@ nav a:hover {
 footer {
   background-color: #07184f;
   color: white;
-  text-align: justified;
+  text-align: left;
   padding: 1.5em;
   font-size: 0.9em;
 }
