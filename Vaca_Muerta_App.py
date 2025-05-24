@@ -4,6 +4,24 @@ import plotly.graph_objects as go
 import numpy as np
 import plotly.express as px
 
+st.set_page_config(
+    page_title="Vaca Muerta Dashboard - Newen",
+    page_icon="images/favicon.png",  # Ruta a tu ícono
+    layout="wide"
+)
+
+# Ocultar menú, pie de página, botón de despliegue y badge de GitHub
+hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .viewerBadge_container__1QSob {display: none;}
+    .stDeployButton {display: none;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 ggl_url='https://drive.google.com/uc?id=1gdB9iv8xcYrMMsQGwWOUSzQkJNu6k9Au'
 
 st.set_page_config(page_title="Dashboard Vaca Muerta Production", layout="wide")
