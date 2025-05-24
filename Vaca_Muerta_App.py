@@ -565,7 +565,7 @@ with tab_kpi:
 
 # --- TOP 10 MEJORES POZOS DE PETRÓLEO Y GAS POR ACUMULADO EN 6 MESES (1 POZO ÚNICO) ---
 
-st.markdown("## Top 10 mejores pozos en 6 meses (Oil & Gas)")
+st.markdown("## Top 10 best wells in first 6 months")
 
 col1, col2 = st.columns(2)
 
@@ -585,7 +585,7 @@ top_oil = (
 top_oil = top_oil[::-1]
 
 with col1:
-    st.subheader("Top 10 Pozos Petrolíferos (acum. 6 meses)")
+    st.subheader("Top 10 Oil wells (acum. 6 meses)")
     fig_top_oil = go.Figure(go.Bar(
         x=top_oil['oil_acum_6m_mbbl'],
         y=top_oil['sigla'],
@@ -618,7 +618,7 @@ top_gas = (
 top_gas = top_gas[::-1]
 
 with col2:
-    st.subheader("Top 10 Pozos Gasíferos (acum. 6 meses)")
+    st.subheader("Top 10 Gas Wells (acum. 6 meses)")
     fig_top_gas = go.Figure(go.Bar(
         x=top_gas['gas_acum_6m_bcf'],
         y=top_gas['sigla'],
@@ -649,7 +649,7 @@ df_gas_scatter['arena_por_frac'] = np.where(df_gas_scatter['cantidad_fracturas']
                                             np.nan)
 
 st.markdown("---")
-st.markdown("### Arena bombeada por fractura por año de inicio")
+st.markdown("### Proppant pumped per frac")
 
 col1, col2 = st.columns(2)
 
