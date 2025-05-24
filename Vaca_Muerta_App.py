@@ -115,8 +115,8 @@ for anio in sorted(prod_pet['anio_inicio'].dropna().unique()):
 fig_pet.update_layout(
     title="Oil (BPD) - Stacked by starting year",
     xaxis_title="Fecha",
-    yaxis_title="Petróleo (BPD)",
-    legend_title="Año de inicio",
+    yaxis_title="Oil (BPD)",
+    legend_title="Starting year",
     height=400
 )
 
@@ -237,10 +237,10 @@ for empresa in sorted(prod_pet['empresa_filtrada'].dropna().unique()):
         )
     )
 fig_pet.update_layout(
-    title="Petróleo (BPD) - Stacked por Compañía",
-    xaxis_title="Fecha",
-    yaxis_title="Petróleo (BPD)",
-    legend_title="Compañía",
+    title="Oil (BPD) - Stacked by Company",
+    xaxis_title="Date",
+    yaxis_title="Oil (BPD)",
+    legend_title="Compañy",
     height=400
 )
 
@@ -258,9 +258,9 @@ for empresa in sorted(prod_gas['empresa_filtrada'].dropna().unique()):
     )
 fig_gas.update_layout(
     title="Gas (Mm³/d) - Stacked por Compañía",
-    xaxis_title="Fecha",
+    xaxis_title="Date",
     yaxis_title="Gas (Mm³/d)",
-    legend_title="Compañia",
+    legend_title="Company",
     height=400
 )
 
@@ -351,9 +351,9 @@ def fig_promedio(df, y_col, title, y_label):
         )
     fig.update_layout(
         title=title,
-        xaxis_title="Mes desde Inicio",
+        xaxis_title="Months since start",
         yaxis_title=y_label,
-        legend_title="Año de inicio",
+        legend_title="Starting year",
         height=400
     )
     fig.update_xaxes(range=[0, 12])
@@ -409,10 +409,10 @@ if df_filtro['sigla'].nunique() == 1:
             yaxis='y2'
         ))
         fig_pozo_indiv_pet.update_layout(
-            title=f"Producción diaria y acumulada - {pozo_ind}",
-            xaxis_title="Mes desde Inicio",
-            yaxis=dict(title="Petróleo (BPD)"),
-            yaxis2=dict(title="Acumulado (Mbbls)", overlaying='y', side='right'),
+            title=f"Daily production and accumulated - {pozo_ind}",
+            xaxis_title="Month since start",
+            yaxis=dict(title="Oil (BPD)"),
+            yaxis2=dict(title="Accumulated (Mbbls)", overlaying='y', side='right'),
             legend_title="Curva"
         )
     elif df_pozo['tipopozo'].str.upper().str.strip().iloc[0] == 'GASÍFERO':
@@ -433,10 +433,10 @@ if df_filtro['sigla'].nunique() == 1:
         ))
         fig_pozo_indiv_gas.update_layout(
             title=f"Producción diaria y acumulada - {pozo_ind}",
-            xaxis_title="Mes desde Inicio",
+            xaxis_title="Month since start",
             yaxis=dict(title="Gas (Mm³/d)"),
-            yaxis2=dict(title="Acumulado (Bcf)", overlaying='y', side='right'),
-            legend_title="Curva"
+            yaxis2=dict(title="Acumulated (Bcf)", overlaying='y', side='right'),
+            legend_title="Curve"
         )
 
 # --- TABS: Pozos promedio / KPIs ---
@@ -595,9 +595,9 @@ with col1:
         hovertemplate='Pozo: %{y}<br>Acum. 6m: %{x:.2f} Mbbl<br>%{text}<extra></extra>'
     ))
     fig_top_oil.update_layout(
-        xaxis_title="Acumulado 6 meses (Mbbl)",
-        yaxis_title="Pozo (sigla)",
-        title="Top 10 Pozos de Petróleo (acumulado 6 meses)",
+        xaxis_title="6 Months Accum (Mbbl)",
+        yaxis_title="Well (Name)",
+        title="Top 10 oil wells (6 month Accum)",
         height=400
     )
     st.plotly_chart(fig_top_oil, use_container_width=True)
@@ -665,9 +665,9 @@ with col1:
         hovertemplate="Pozo: %{text}<br>Año: %{x}<br>Arena/Frac: %{y:.1f} tn"
     ))
     fig_scatter_oil.update_layout(
-        title="Petrolíferos: Arena bombeada por fractura",
-        xaxis_title="Año de inicio",
-        yaxis_title="Arena por fractura (toneladas)",
+        title="Oil Wells: Proppant per frac",
+        xaxis_title="Year of start",
+        yaxis_title="Proppant per frac (tons)",
         height=400
     )
     st.plotly_chart(fig_scatter_oil, use_container_width=True)
@@ -684,9 +684,9 @@ with col2:
         hovertemplate="Pozo: %{text}<br>Año: %{x}<br>Arena/Frac: %{y:.1f} tn"
     ))
     fig_scatter_gas.update_layout(
-        title="Gasíferos: Arena bombeada por fractura",
-        xaxis_title="Año de inicio",
-        yaxis_title="Arena por fractura (toneladas)",
+        title="Gas Wells: Proppant per frac",
+        xaxis_title="Year of start",
+        yaxis_title="Proppant per frac (tons)",
         height=400
     )
     st.plotly_chart(fig_scatter_gas, use_container_width=True)
