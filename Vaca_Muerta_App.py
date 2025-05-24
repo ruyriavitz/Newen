@@ -5,10 +5,8 @@ import numpy as np
 import plotly.express as px
 
 st.set_page_config(
-    page_title="Vaca Muerta Dashboard - Newen",
-    page_icon="images/favicon.png",  # Ruta a tu ícono
+    page_title="Dashboard Vaca Muerta Production",
     layout="wide"
-)
 
 # Ocultar menú, pie de página, botón de despliegue y badge de GitHub
 hide_streamlit_style = """
