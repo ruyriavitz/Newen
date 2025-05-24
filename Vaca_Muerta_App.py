@@ -456,19 +456,19 @@ with tab_tipo:
     with col1:
         
         if tipo_curva == "Producción promedio mensual":
-            st.plotly_chart(fig_promedio(pozo_prom_pet, 'pet_bpd', "Pozo Promedio por Año de Inicio (Petróleo)", "Petróleo promedio (BPD)"), use_container_width=True)
+            st.plotly_chart(fig_promedio(pozo_prom_pet, 'pet_bpd', "Type Oil well", "(BPD)"), use_container_width=True)
         else:
-            st.plotly_chart(fig_promedio(pozo_acum_pet, 'pet_mbbl_acum', "Pozo Promedio Acumulado por Año (Petróleo)", "Petróleo acumulado promedio (Mbbls)"), use_container_width=True)
+            st.plotly_chart(fig_promedio(pozo_acum_pet, 'pet_mbbl_acum', "Type Oil well (Acum bbls)", "(Mbbls)"), use_container_width=True)
 
 
     with col2:
         if tipo_curva == "Producción promedio mensual":
-            st.plotly_chart(fig_promedio(pozo_prom_gas, 'gas_mm3d', "Pozo Promedio por Año de Inicio (Gas)", "Gas promedio (Mm³/d)"), use_container_width=True)
+            st.plotly_chart(fig_promedio(pozo_prom_gas, 'gas_mm3d', "Type Gas Well", "Gas promedio (Mm³/d)"), use_container_width=True)
         else:
-            st.plotly_chart(fig_promedio(pozo_acum_gas, 'gas_bcf_acum', "Pozo Promedio Acumulado por Año (Gas)", "Gas acumulado promedio (Bcf)"), use_container_width=True)
+            st.plotly_chart(fig_promedio(pozo_acum_gas, 'gas_bcf_acum', "Type Gas well (Acum Gas)", "(Bcf)"), use_container_width=True)
 
     if show_indiv_pet or show_indiv_gas:
-        st.markdown("### Pozo individual seleccionado")
+        st.markdown("### Selected well")
         if show_indiv_pet:
             st.plotly_chart(fig_pozo_indiv_pet, use_container_width=True)
         elif show_indiv_gas:
@@ -476,7 +476,7 @@ with tab_tipo:
 
 
 with tab_kpi:
-    st.subheader("KPIs de 6 meses por año de inicio")
+    st.subheader("6 Months Acum. production")
     col1, col2 = st.columns(2)
     # --- KPI GAS ---
     df_gas['gas6m_x_lateral_m3'] = df_gas['gas6m_x_lateral'] * 1000
@@ -514,8 +514,8 @@ with tab_kpi:
             showactive=True,
             x=1.1, y=1.15
         )],
-        title="KPI Gasífero: Gas 6m / Lateral (m³/m)",
-        xaxis_title="Año de inicio",
+        title="Gas Well: 6m Acum / Lateral (m³/m)",
+        xaxis_title="Year since start",
         yaxis_title="Valor KPI (m³)",
         legend_title="KPI",
         height=400
@@ -552,7 +552,7 @@ with tab_kpi:
             showactive=True,
             x=1.1, y=1.15
         )],
-        title="KPI Petrolero: Oil 6m / Lateral (Mbbl/m)",
+        title="Acum Oil 6 months / Lateral (Mbbl/m)",
         xaxis_title="Año de inicio",
         yaxis_title="Valor KPI (Mbbl)",
         legend_title="KPI",
