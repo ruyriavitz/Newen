@@ -4,11 +4,13 @@ import plotly.graph_objects as go
 import numpy as np
 import plotly.express as px
 
+# 👉 Esta línea tiene que ir justo acá
 st.set_page_config(
     page_title="Dashboard Vaca Muerta Production",
     layout="wide"
+)
 
-# Ocultar menú, pie de página, botón de despliegue y badge de GitHub
+# 👉 Después sí podés ocultar menú y otros elementos
 hide_streamlit_style = """
     <style>
     #MainMenu {visibility: hidden;}
